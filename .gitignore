@@ -1,0 +1,6 @@
+DATASET_Synapse/
+*pycache*
+*__pycache__*
+*.pkl
+*.png
+*.jpg
