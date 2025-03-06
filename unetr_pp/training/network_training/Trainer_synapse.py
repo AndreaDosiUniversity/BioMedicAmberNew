@@ -510,7 +510,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
         if do_mirroring:
             assert self.data_aug_params["do_mirror"], "Cannot do mirroring as test time augmentation when training " \
                                                       "was done without mirroring"
-        print("THE NETW IN THE TEST PHASE IS", self.network)
+        #print("THE NETW IN THE TEST PHASE IS", self.network)
 
         valid = list((SegmentationNetwork, nn.DataParallel))
         assert isinstance(self.network, tuple(valid))
