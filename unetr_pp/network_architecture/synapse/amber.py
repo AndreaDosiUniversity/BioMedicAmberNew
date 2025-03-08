@@ -473,15 +473,29 @@ class AmberThreeDim(SegmentationNetwork):
                  depths=depths, sr_ratios=sr_ratios)
         self.decoder = SegFormerHead(feature_strides=[2,4, 8, 16],img_size=img_size, in_channels=embed_dims ,embedding_dim = embed_dims[-1], num_classes=num_classes)
         self.linear_pred = nn.Conv3d(self.num_classes, self.num_classes, kernel_size = 1 , bias=False)
+        self.deconv = nn.Sequential(nn.ConvTranspose3d(
+            in_channels=num_classes,
+            out_channels=num_classes,
+            kernel_size=(2, 2, 2),  # or (2, 2, 2), etc. depends on how much you need to upscale
+            stride=(2, 2, 2),
+            padding=(0, 0, 0),
+            output_padding=(0, 0, 0),
+            bias=False
+        ),
+            nn.BatchNorm3d(num_classes),
+            nn.ReLU()    
+        )
 
-
-    def resize(self, input, size=None, scale_factor=None, mode='nearest', align_corners=None):
-        return F.interpolate(input, size, scale_factor, mode, align_corners)
+    #def resize(self, input, size=None, scale_factor=None, mode='nearest', align_corners=None):
+        #return F.interpolate(input, size, scale_factor, mode, align_corners)
 
     def forward(self, input):
         x = self.encoder(input)
         x = self.decoder(x)
-        x = self.resize(x, size=input.size()[2:],mode='trilinear',align_corners=False)
+        ## this is as 4th experiment ##
+        x = self.deconv(x)
+        x = self.deconv(x)
+        #x = self.resize(x, size=input.size()[2:],mode='trilinear',align_corners=False)
         #this klayer is added in the third experiment
         x = self.linear_pred(x)
         return x
