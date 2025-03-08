@@ -220,7 +220,7 @@ class MixVisionTransformer(nn.Module):
         # patch_embed
         if isinstance(img_size, int):
             #the original was patch 7 and stride 4
-            self.patch_embed1 = OverlapPatchEmbed(img_size=img_size, patch_size=6, stride=3, in_chans=in_chans,
+            self.patch_embed1 = OverlapPatchEmbed(img_size=img_size, patch_size=7, stride=4, in_chans=in_chans,
                                               embed_dim=embed_dims[0])
             self.patch_embed2 = OverlapPatchEmbed(img_size=img_size // 2, patch_size=3, stride=1, in_chans=embed_dims[0],
                                               embed_dim=embed_dims[1])
@@ -230,7 +230,7 @@ class MixVisionTransformer(nn.Module):
                                               embed_dim=embed_dims[3])
             
         elif isinstance(img_size, tuple):
-            self.patch_embed1 = OverlapPatchEmbed(img_size=(img_size[0], img_size[1], img_size[2]), patch_size=6, stride=3, in_chans=in_chans,
+            self.patch_embed1 = OverlapPatchEmbed(img_size=(img_size[0], img_size[1], img_size[2]), patch_size=7, stride=4, in_chans=in_chans,
                                               embed_dim=embed_dims[0])
             self.patch_embed2 = OverlapPatchEmbed(img_size=(img_size[0] // 2, img_size[1] //2, img_size[2]//2), patch_size=3, stride=1, in_chans=embed_dims[0],
                                               embed_dim=embed_dims[1])
@@ -472,6 +472,8 @@ class AmberThreeDim(SegmentationNetwork):
                  attn_drop_rate=attn_drop_rate, drop_path_rate=drop_path_rate, norm_layer=norm_layer,
                  depths=depths, sr_ratios=sr_ratios)
         self.decoder = SegFormerHead(feature_strides=[2,4, 8, 16],img_size=img_size, in_channels=embed_dims ,embedding_dim = embed_dims[-1], num_classes=num_classes)
+        self.linear_pred = nn.Conv3d(self.num_classes, self.num_classes, kernel_size = 1 , bias=False)
+
 
     def resize(self, input, size=None, scale_factor=None, mode='nearest', align_corners=None):
         return F.interpolate(input, size, scale_factor, mode, align_corners)
@@ -480,5 +482,6 @@ class AmberThreeDim(SegmentationNetwork):
         x = self.encoder(input)
         x = self.decoder(x)
         x = self.resize(x, size=input.size()[2:],mode='trilinear',align_corners=False)
-        #print("THE FINAL OUTPUT SHAPE IS ", x.shape)
+        #this klayer is added in the third experiment
+        x = self.linear_pred(x)
         return x
